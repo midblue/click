@@ -19,6 +19,11 @@
     calc(100% * min(1, var(--sMult) + 0.5)),
     80%
   );
+  --highlight3: hsl(
+    calc(var(--h) + 30),
+    calc(100% * min(1, var(--sMult) + 0.5)),
+    80%
+  );
   --warning: hsl(15, 80%, 57%);
   --warningL: hsl(15, 85%, 65%);
 
@@ -185,6 +190,16 @@ button,
 
     &:hover {
       background: var(--highlight2);
+    }
+  }
+
+  &.primary2 {
+    color: var(--bg);
+    background: var(--highlight3);
+    box-shadow: none;
+
+    &:hover {
+      background: var(--highlight);
     }
   }
 

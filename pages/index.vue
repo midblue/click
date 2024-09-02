@@ -47,17 +47,23 @@
         </div> -->
 
         <div
-          style="max-width: 200px"
+          style="max-width: 250px"
           class="padtop marauto flexcolumn gapsmall"
         >
           <div class="flexstretch flexwrap gaptiny">
             <button
               class="small"
-              :class="{
-                primary: h.soundName.value === soundName,
-              }"
               v-for="soundName in Object.keys(h.sounds)"
+              :class="{
+                primary2:
+                  h.secondarySoundName.value === soundName,
+                primary:
+                  h.primarySoundName.value === soundName,
+              }"
               @click="h.setSound(soundName as any)"
+              @dblclick="
+                h.setSound(soundName as any, 'secondary')
+              "
             >
               {{
                 c.capitalize(c.camelCaseToWords(soundName))
@@ -84,6 +90,37 @@
             :value="h.volume.value"
             @change="(e:any) => h.setVolume(e.target.value)"
           />
+        </div>
+
+        <div class="flexcenter">
+          <button
+            @click="subdivide = 1"
+            class="small"
+            :class="{ primary: subdivide === 1 }"
+          >
+            ♩
+          </button>
+          <button
+            @click="subdivide = 2"
+            class="small"
+            :class="{ primary: subdivide === 2 }"
+          >
+            ♫
+          </button>
+          <button
+            @click="subdivide = 3"
+            class="small"
+            :class="{ primary: subdivide === 3 }"
+          >
+            ♪³
+          </button>
+          <button
+            @click="subdivide = 4"
+            class="small"
+            :class="{ primary: subdivide === 4 }"
+          >
+            ♬♬
+          </button>
         </div>
 
         <div class="flexcenter gap">
@@ -323,6 +360,7 @@ const endBpm = ref(120)
 const elapsedTimeInMs = ref(0)
 const bpmStartToEndInMinutes = ref(1)
 const jumpByIncrementsOf = ref(0)
+const subdivide = ref(1)
 
 const currentBpm = ref(startBpm.value)
 const progress = ref(0)
@@ -368,7 +406,8 @@ function resetAndStart({
 function togglePause() {
   if (playState.value === 'play') {
     playState.value = 'pause'
-    clearTimeout(timeout)
+    clearTimeout(nextHitTimeout)
+    for (let t in nextSubdivisionTimeouts) clearTimeout(t)
   } else {
     playState.value = 'play'
     go(playbackId.value)
@@ -377,14 +416,16 @@ function togglePause() {
 
 function stop() {
   playState.value = 'stop'
-  clearTimeout(timeout)
+  clearTimeout(nextHitTimeout)
+  for (let t in nextSubdivisionTimeouts) clearTimeout(t)
   elapsedTimeInMs.value = 0
   currentBpm.value = startBpm.value
   playbackId.value = null
   progress.value = 0
 }
 
-let timeout: any
+let nextHitTimeout: any
+let nextSubdivisionTimeouts: any[] = []
 function go(currentPlaybackId: string | null = null) {
   if (
     (currentPlaybackId &&
@@ -424,13 +465,24 @@ function go(currentPlaybackId: string | null = null) {
     return
   }
 
-  const bpmToNext = bpmToMs(currentBpm.value)
-  // c.log(bpmToNext)
-
-  timeout = setTimeout(() => {
-    elapsedTimeInMs.value += bpmToNext
+  const msToNext = bpmToMs(currentBpm.value)
+  // c.log(msToNext)
+  nextHitTimeout = setTimeout(() => {
+    elapsedTimeInMs.value += msToNext
     go(currentPlaybackId)
-  }, bpmToNext)
+  }, msToNext)
+
+  for (let t of nextSubdivisionTimeouts) clearTimeout(t)
+  nextSubdivisionTimeouts = []
+  if (subdivide.value > 1) {
+    const msToNextSubdivision = msToNext / subdivide.value
+    for (let i = 1; i < subdivide.value; i++)
+      nextSubdivisionTimeouts.push(
+        setTimeout(() => {
+          h.playOneShot('secondary', 0.3)
+        }, msToNextSubdivision * i),
+      )
+  }
 }
 
 function keyListener(e: KeyboardEvent) {
