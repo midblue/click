@@ -2,7 +2,10 @@
 export default defineNuxtConfig({
   devtools: { enabled: false },
   css: ['~/assets/main.scss'],
+
   app: {
-    baseURL: '/click',
+    baseURL: '/p/click',
   },
+
+  modules: ['@nuxt/icon'],
 })

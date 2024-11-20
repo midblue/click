@@ -8,14 +8,17 @@
     "start": "nuxt start",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "golive": "npm run generate && ssh root@p.jasperstephenson.com 'rm -rf /www/p/click' && scp -r /Users/jasper/Code/click/.output/public root@p.jasperstephenson.com:/www/p/click"
   },
   "dependencies": {
+    "@nuxt/icon": "^1.8.1",
     "@types/howler": "^2.2.11",
     "howler": "^2.2.4",
     "nuxt": "^3.12.1",
     "sass": "^1.77.5",
     "vue": "^3.4.27",
     "vue-router": "^4.3.3"
-  }
+  },
+  "packageManager": "pnpm@9.0.6+sha1.648f6014eb363abb36618f2ba59282a9eeb3e879"
 }
