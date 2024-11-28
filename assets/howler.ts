@@ -1,6 +1,9 @@
 import * as c from '~/assets/common'
 import { Howl, Howler } from 'howler'
 
+const primaryRate = 2
+const secondaryRate = 1.5
+const secondaryVolumeMultiplier = 0.7
 export const sounds = {
   beepHigh: 'beepHigh.mp3',
   beep: 'beep.mp3',
@@ -9,12 +12,12 @@ export const sounds = {
   tap: 'tap.mp3',
   hat: 'hat.mp3',
 }
-export const volume = ref(0.5)
+export const volume = ref(1)
 export const primarySoundName = ref(
   Object.keys(sounds)[0] as keyof typeof sounds,
 )
 export const secondarySoundName = ref(
-  Object.keys(sounds)[1] as keyof typeof sounds,
+  Object.keys(sounds)[0] as keyof typeof sounds,
 )
 let primaryHowl: Howl
 let secondaryHowl: Howl
@@ -45,8 +48,13 @@ export function setSound(
     src: [sounds[soundName.value]],
     volume: volume.value,
   })
-  if (whichHowl === 'primary') primaryHowl = newHowl
-  else secondaryHowl = newHowl
+  if (whichHowl === 'primary') {
+    primaryHowl = newHowl
+    primaryHowl.rate(primaryRate)
+  } else {
+    secondaryHowl = newHowl
+    secondaryHowl.rate(secondaryRate)
+  }
 }
 
 export function playOneShot(
@@ -59,8 +67,12 @@ export function playOneShot(
       : secondaryHowl
 
   if (volumeMultiplier)
-    howl.volume(volume.value * volumeMultiplier)
-  else howl.volume(volume.value)
+    howl.volume(
+      volume.value *
+        volumeMultiplier *
+        secondaryVolumeMultiplier,
+    )
+  else howl.volume(volume.value * secondaryVolumeMultiplier)
 
   howl.play()
 }

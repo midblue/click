@@ -11,17 +11,17 @@
         </h1>
 
         <div
-          class="barHolder padtop padbot pointer fullwidth"
-          :class="{ disabled: !playbackId }"
+          class="barHolder padtop padbot fullwidth"
+          :class="{
+            disabled: !playbackId,
+            pointer: bpmStartToEndInMinutes,
+          }"
           ref="progressBar"
           @click="clickBar"
           @mousemove="barHover"
           @mouseleave="barHoverPercent = 0"
         >
-          <div
-            class="bar"
-            v-if="bpmStartToEndInMinutes > 0"
-          >
+          <div class="bar">
             <div
               class="fill"
               :style="{
@@ -29,6 +29,7 @@
               }"
             ></div>
             <div
+              v-if="!mobile && bpmStartToEndInMinutes"
               class="barHoverFill"
               :style="{
                 width: barHoverPercent * 100 + '%',
@@ -47,7 +48,7 @@
             "
             >—{{ c.r2(effectiveEndBpm) }}</span
           >
-          BPM
+          bpm
           <span v-if="bpmStartToEndInMinutes > 0">
             <span v-if="startBpm !== effectiveEndBpm"
               >over</span
@@ -55,10 +56,13 @@
             <span v-else>for</span>
             {{ c.r2(bpmStartToEndInMinutes) }} min{{
               bpmStartToEndInMinutes > 1 ? 's' : ''
-            }}<span v-if="jumpByIncrementsOf"
+            }}<span v-if="isRange && jumpByIncrementsOf"
               >, blocks of
               {{ c.r2(jumpByIncrementsOf) }}</span
-            ><span v-else-if="startBpm !== effectiveEndBpm"
+            ><span
+              v-else-if="
+                isRange && startBpm !== effectiveEndBpm
+              "
               >, gradual</span
             >
           </span>
@@ -114,7 +118,7 @@
             @change="(e:any) => h.setVolume(e.target.value)"
           /> -->
 
-          <div class="flexcenter gapsmall fullwidth">
+          <div class="flexcenter gap fullwidth">
             <Icon
               name="material-symbols:music-note"
               class="icon"
@@ -128,6 +132,7 @@
               :initialUpperValue="endBpm"
               :line="true"
               :showValues="true"
+              :maintainGap="40"
               @update="
                 (lower) => {
                   startBpm = lower
@@ -138,19 +143,24 @@
             />
           </div>
 
-          <div class="flexcenter gapsmall fullwidth">
+          <div class="flexcenter gap fullwidth">
             <Icon
               name="material-symbols:timer"
               class="icon"
             />
             <Slider
-              :min="1"
-              :max="15"
+              :min="isRange ? 1 : 0"
+              :max="30"
               :step="1"
+              :exponentialScale="1.3"
               :initialValue="bpmStartToEndInMinutes"
               :line="true"
               :showValues="true"
               valueAddendum=":00"
+              fillTo="start"
+              :customLabel="
+                (val) => (val ? undefined : '∞')
+              "
               @update="
                 (val) => (bpmStartToEndInMinutes = val)
               "
@@ -158,7 +168,9 @@
           </div>
         </div>
 
-        <div class="buttonRow marbot martop flexstretch">
+        <div
+          class="buttonRow fullwidth marbot martop flexstretch"
+        >
           <button
             class="small icon steps"
             :class="{
@@ -177,7 +189,10 @@
               () => {
                 jumpByIncrements = true
                 if (!isRange) {
-                  endBpm = Math.min(startBpm + 60, 300)
+                  if (endBpm <= startBpm)
+                    endBpm = Math.min(startBpm + 60, 300)
+                  if (bpmStartToEndInMinutes === 0)
+                    bpmStartToEndInMinutes = 1
                   isRange = true
                 }
               }
@@ -196,7 +211,10 @@
               () => {
                 jumpByIncrements = false
                 if (!isRange) {
-                  endBpm = Math.min(startBpm + 60, 300)
+                  if (endBpm <= startBpm)
+                    endBpm = Math.min(startBpm + 60, 300)
+                  if (bpmStartToEndInMinutes === 0)
+                    bpmStartToEndInMinutes = 1
                   isRange = true
                 }
               }
@@ -206,7 +224,9 @@
           </button>
         </div>
 
-        <div class="flexcenter buttonRow flexstretch">
+        <div
+          class="flexcenter fullwidth buttonRow flexstretch"
+        >
           <button
             @click="subdivide = 1"
             class="small icon"
@@ -276,177 +296,6 @@
         </div>
       </div>
     </div>
-    <!-- 
-    <div class="flexcolumn" style="width: 230px">
-      <div class="flexcolumn gapsmall">
-        <div class="flexstretch flexwrap gapsmall">
-          <button class="small" @click="resetAndStart({})">
-            60
-          </button>
-          <button
-            class="small"
-            @click="resetAndStart({ startBpm: 80 })"
-          >
-            80
-          </button>
-          <button
-            class="small"
-            @click="resetAndStart({ startBpm: 100 })"
-          >
-            100
-          </button>
-          <button
-            class="small"
-            @click="resetAndStart({ startBpm: 120 })"
-          >
-            120
-          </button>
-          <button
-            class="small"
-            @click="resetAndStart({ startBpm: 140 })"
-          >
-            140
-          </button>
-          <button
-            class="small"
-            @click="resetAndStart({ startBpm: 160 })"
-          >
-            160
-          </button>
-          <button
-            class="small"
-            @click="resetAndStart({ startBpm: 180 })"
-          >
-            180
-          </button>
-          <button
-            class="small"
-            @click="resetAndStart({ startBpm: 200 })"
-          >
-            200
-          </button>
-        </div>
-
-        <hr />
-
-        <button
-          @click="
-            resetAndStart({
-              startBpm: 60,
-              bpmStartToEndInMinutes: 2,
-            })
-          "
-        >
-          60, 2 mins
-        </button>
-        <button
-          @click="
-            resetAndStart({
-              startBpm: 60,
-              bpmStartToEndInMinutes: 5,
-            })
-          "
-        >
-          60, 5 mins
-        </button>
-
-        <button
-          @click="
-            resetAndStart({
-              startBpm: 100,
-              bpmStartToEndInMinutes: 5,
-            })
-          "
-        >
-          100, 5 mins
-        </button>
-
-        <hr />
-        
-
-        <button
-          @click="
-            resetAndStart({
-              startBpm: 60,
-              endBpm: 120,
-              bpmStartToEndInMinutes: 5,
-              jumpByIncrementsOf: 20,
-            })
-          "
-        >
-          60-120, 5 mins, blocks of 20
-        </button>
-        <button
-          @click="
-            resetAndStart({
-              startBpm: 60,
-              endBpm: 200,
-              bpmStartToEndInMinutes: 5,
-              jumpByIncrementsOf: 20,
-            })
-          "
-        >
-          60-200, 5 mins, blocks of 20
-        </button>
-        <button
-          @click="
-            resetAndStart({
-              startBpm: 60,
-              endBpm: 280,
-              bpmStartToEndInMinutes: 5,
-              jumpByIncrementsOf: 20,
-            })
-          "
-        >
-          60-280, 5 mins, blocks of 20
-        </button>
-      </div>
-    </div>
-    <div class="flexcolumn" style="width: 230px">
-      <div>
-        <div class="label">Start BPM</div>
-        <input v-model="startBpm" type="number" />
-      </div>
-
-      <div
-        :class="{ disabled: bpmStartToEndInMinutes <= 0 }"
-      >
-        <div class="label">End BPM</div>
-        <input v-model="endBpm" type="number" />
-      </div>
-
-      <div>
-        <div class="label">
-          Minutes
-          <span class="sub marleft">0 = forever</span>
-        </div>
-        <input
-          v-model="bpmStartToEndInMinutes"
-          type="number"
-        />
-      </div>
-
-      <div
-        :class="{ disabled: bpmStartToEndInMinutes <= 0 }"
-      >
-        <div class="label">
-          Jump by blocks of
-          <span class="sub marleft">0 = auto</span>
-        </div>
-        <input v-model="jumpByIncrementsOf" type="number" />
-      </div>
-
-      <button
-        @click="
-          () => {
-            stop()
-            go()
-          }
-        "
-      >
-        Go
-      </button>
-    </div> -->
   </div>
 </template>
 
@@ -455,12 +304,16 @@ import * as c from '~/assets/common'
 import * as h from '~/assets/howler'
 
 const startBpm = ref(120)
-const endBpm = ref(160)
+const endBpm = ref(180)
 const isRange = ref(false)
 const elapsedTimeInMs = ref(0)
 const bpmStartToEndInMinutes = ref(5)
 const jumpByIncrements = ref(false)
 const subdivide = ref(1)
+
+const mobile = computed(() => {
+  return (window?.innerWidth || 0) < 600
+})
 
 const effectiveEndBpm = computed(() => {
   if (!isRange.value) return startBpm.value
@@ -609,6 +462,7 @@ function barHover(e: MouseEvent) {
 }
 function clickBar(e: MouseEvent) {
   if (!progressBar.value) return
+  if (!bpmStartToEndInMinutes.value) return
   const rect = progressBar.value.getBoundingClientRect()
   const percent = (e.clientX - rect.left) / rect.width
 

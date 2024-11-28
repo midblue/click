@@ -27,8 +27,8 @@
   --warning: hsl(15, 80%, 57%);
   --warningL: hsl(15, 85%, 65%);
 
-  --borderRadius: 3px;
-  --borderRadius2: 9px;
+  --borderRadius: 20px;
+  --borderRadius2: calc(var(--borderRadius) * 2);
 
   --pagePadLr: 2.5rem;
   --pagePadTb: 1.5rem;
@@ -42,7 +42,7 @@
 }
 
 html {
-  font-size: 13px;
+  font-size: 16px;
   line-height: var(--lineHeight);
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -206,6 +206,7 @@ button,
   &.big {
     font-size: 1em !important;
     padding: 2em 3em;
+    border-radius: var(--borderRadius2);
   }
   &.small {
     font-size: 1em !important;
