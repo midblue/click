@@ -152,7 +152,7 @@
               :min="isRange ? 1 : 0"
               :max="30"
               :step="1"
-              :exponentialScale="1.3"
+              :exponentialScale="1.5"
               :initialValue="bpmStartToEndInMinutes"
               :line="true"
               :showValues="true"
@@ -269,7 +269,7 @@
           <button
             class="icon"
             @click="togglePause()"
-            v-if="playbackId"
+            v-if="playbackId && bpmStartToEndInMinutes > 0"
           >
             <Icon
               v-if="playState === 'pause'"
@@ -307,7 +307,7 @@ const startBpm = ref(120)
 const endBpm = ref(180)
 const isRange = ref(false)
 const elapsedTimeInMs = ref(0)
-const bpmStartToEndInMinutes = ref(5)
+const bpmStartToEndInMinutes = ref(0)
 const jumpByIncrements = ref(false)
 const subdivide = ref(1)
 
@@ -372,6 +372,13 @@ function resetAndStart({
 
 function togglePause() {
   if (playState.value === 'play') {
+    if (
+      !isRange.value &&
+      bpmStartToEndInMinutes.value === 0
+    ) {
+      stop()
+      return
+    }
     playState.value = 'pause'
     clearTimeout(nextHitTimeout)
     for (let t in nextSubdivisionTimeouts) clearTimeout(t)

@@ -1,9 +1,9 @@
 import * as c from '~/assets/common'
 import { Howl, Howler } from 'howler'
 
-const primaryRate = 2
-const secondaryRate = 1.5
-const secondaryVolumeMultiplier = 0.7
+const primaryRate = 1.5
+const secondaryRate = primaryRate * 0.6666666 // down a fifth
+const secondaryVolumeMultiplier = 0.5
 export const sounds = {
   beepHigh: 'beepHigh.mp3',
   beep: 'beep.mp3',

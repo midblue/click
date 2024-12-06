@@ -211,11 +211,24 @@ const upperValue = ref(
   props.initialUpperValue || props.initialValue,
 )
 
-onMounted(clampValues)
-watch(() => props.range, clampValues)
-watch(() => props.min, clampValues)
-watch(() => props.max, clampValues)
-function clampValues() {
+onMounted(() => clampValues({ sendUpdates: true }))
+watch(
+  () => props.range,
+  () => clampValues({ sendUpdates: true }),
+)
+watch(
+  () => props.min,
+  () => clampValues(),
+)
+watch(
+  () => props.max,
+  () => clampValues(),
+)
+function clampValues(
+  options: { sendUpdates?: boolean } | undefined = {
+    sendUpdates: false,
+  },
+) {
   value.value = c.clamp(
     props.min,
     Math.round(props.initialValue / props.step) *
@@ -230,6 +243,13 @@ function clampValues() {
     ) * props.step,
     props.max,
   )
+
+  if (options?.sendUpdates) {
+    if (value.value !== props.initialValue)
+      emitUpdate('update', value.value)
+    if (upperValue.value !== props.initialUpperValue)
+      emitUpdate('update:upper', upperValue.value)
+  }
 }
 const isDraggingLower = ref(false)
 const isDraggingUpper = ref(false)
@@ -280,7 +300,13 @@ function clickSlider(event: MouseEvent | TouchEvent) {
     props.min + (props.max - props.min) * percentAlongBar
   const rounded =
     Math.round(newValue / props.step) * props.step
-  if (props.range && rounded >= upperValue.value) {
+
+  const willMoveLowerValue =
+    !props.range ||
+    Math.abs(rounded - value.value) <=
+      Math.abs(rounded - upperValue.value)
+  c.log({ willMoveLowerValue })
+  if (!willMoveLowerValue) {
     const prev = upperValue.value
     upperValue.value = rounded
     if (prev !== rounded) emitUpdate('updateUpper', rounded)
